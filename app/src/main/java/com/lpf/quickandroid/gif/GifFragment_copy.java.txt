@@ -1,0 +1,362 @@
+package com.lpf.quickandroid.gif;
+
+
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
+import android.widget.Toast;
+
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.google.gson.Gson;
+import com.lpf.quickandroid.R;
+import com.lpf.quickandroid.base.BaseFragment;
+import com.lpf.quickandroid.demo.ItemDemoBean;
+import com.lpf.quickandroid.demo.MultiItemPullToRefreshAdapter;
+import com.lpf.quickandroid.gif.mvp.Feed;
+import com.lpf.quickandroid.gif.mvp.GifContract;
+import com.lpf.quickandroid.gif.mvp.GifModel;
+import com.lpf.quickandroid.gif.mvp.GifPresenter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import butterknife.Unbinder;
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static com.lpf.quickandroid.gif.Util.ignoreTrust;
+
+/**
+ * A simple {@link Fragment} lass.
+ */
+public class GifFragment_copy extends BaseFragment<GifPresenter,GifModel> implements
+        GifContract.View,
+        SwipeRefreshLayout.OnRefreshListener,
+        BaseQuickAdapter.RequestLoadMoreListener {
+
+    private FrameLayout mFragmentContainer;
+
+    private MultiItemPullToRefreshAdapter mMultiRefreshAdapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private RecyclerView mRecyclerView;
+    private List<ItemDemoBean> mDataList;
+    private Unbinder unbinder;
+
+
+    public GifFragment_copy() {
+        // Required empty public constructor
+    }
+
+    @Override
+    protected View initView(LayoutInflater inflater, ViewGroup container) {
+        View rootView = inflater.inflate(R.layout.fragment_gif, container, false);
+
+        initDemoRv(rootView);
+
+
+
+        initDatas();
+
+
+        return rootView;
+
+    }
+
+    // init Second Fragment demo
+    private void initDemoRv(View view) {
+        mFragmentContainer = (FrameLayout) view.findViewById(R.id.gifFragmentContainer);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.gif_sw);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        //设置刷新时动画的颜色，可以设置4个
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeResource(android.R.color.white);
+        mSwipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_light,
+                android.R.color.holo_red_light, android.R.color.holo_orange_light,
+                android.R.color.holo_green_light);
+        mSwipeRefreshLayout.setProgressViewOffset(false, 0, (int) TypedValue
+                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources()
+                        .getDisplayMetrics()));
+
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.gif_rv);
+        mRecyclerView.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mMultiRefreshAdapter = new MultiItemPullToRefreshAdapter(mDataList);
+        mMultiRefreshAdapter.openLoadAnimation(BaseQuickAdapter.SCALEIN);
+        View headerView = getActivity().getLayoutInflater().inflate(R.layout.item_header, (ViewGroup) mRecyclerView.getParent(), false);
+        mMultiRefreshAdapter.addHeaderView(headerView);
+        mMultiRefreshAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                Toast.makeText(getActivity(), "Click all Item Area", Toast.LENGTH_SHORT).show();
+            }
+        });
+        mMultiRefreshAdapter.setOnLoadMoreListener(this, mRecyclerView);
+        mMultiRefreshAdapter.setEmptyView(R.layout.empty_view);
+
+        mRecyclerView.setAdapter(mMultiRefreshAdapter);
+    }
+
+    private void initDatas() {
+        mDataList = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            ItemDemoBean item = new ItemDemoBean();
+            if (i % 2 == 0) {
+                item.setType(0);
+            } else {
+                item.setType(1);
+            }
+            item.setTitle("Title->" + i);
+            item.setImageResource(R.drawable.ic_home_black_24dp);
+            mDataList.add(item);
+        }
+
+
+
+        new AsyncTask<Void,String,List<Feed>>(){
+            /**
+             * <p>Runs on the UI thread after {@link #doInBackground}. The
+             * specified result is the value returned by {@link #doInBackground}.</p>
+             * <p>
+             * <p>This method won't be invoked if the task was cancelled.</p>
+             *
+             * @param feeds The result of the operation computed by {@link #doInBackground}.
+             * @see #onPreExecute
+             * @see #doInBackground
+             * @see #onCancelled(Object)
+             */
+            @Override
+            protected void onPostExecute(List<Feed> feeds) {
+                super.onPostExecute(feeds);
+            }
+
+            /**
+             * Override this method to perform a computation on a background thread. The
+             * specified parameters are the parameters passed to {@link #execute}
+             * by the caller of this task.
+             * <p>
+             * This method can call {@link #publishProgress} to publish updates
+             * on the UI thread.
+             *
+             * @param params The parameters of the task.
+             * @return A result, defined by the subclass of this task.
+             * @see #onPreExecute()
+             * @see #onPostExecute
+             * @see #publishProgress
+             */
+            @Override
+            protected List<Feed> doInBackground(Void... params) {
+                NewsListRequest newsListRequest = new NewsListRequest();
+                newsListRequest.initWithNum("GIF", NewsListRequest.PullAction.Enter, 1, "", 50);
+                RequestBody postBody = RequestBody.create(MediaType.parse("application/json"), Util.toJsonPretty(newsListRequest));
+                Request.Builder requestBuilder = new Request.Builder().url("https://news-web-staging.newsstationtech.com/v1/feeds").post(postBody);
+                requestBuilder = Util.addHeader(requestBuilder);
+                Request request = requestBuilder.build();
+                try {
+                    OkHttpClient.Builder builder = new OkHttpClient().newBuilder()
+                            .readTimeout(NGCommonConfiguration.COMMON_READ_TIME_OUT, TimeUnit.SECONDS)
+                            .connectTimeout(NGCommonConfiguration.COMMON_CONNECT_TIME_OUT, TimeUnit.SECONDS)
+                            .writeTimeout(NGCommonConfiguration.COMMON_WRITE_TIME_OUT, TimeUnit.SECONDS);
+                    builder = ignoreTrust(builder);
+                    //Log.d("test", Util.toJsonPretty(newsListRequest));
+                    OkHttpClient okHttpClient = builder.build();
+                    Call call = okHttpClient.newCall(request);
+                    Response response = call.execute();
+                    if (response.code() == 200) {
+                        String responseStr = response.body().string();
+                        Gson gson = new Gson();
+                        Feed[] feeds = gson.fromJson(responseStr, Feed[].class);
+                        List<Feed> newFeedList = Arrays.asList(feeds);
+                        return newFeedList;
+                    }
+                    //Log.d("test", "code:" + response.code());
+                } catch (java.net.UnknownHostException e) {
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+                return null;
+            }
+
+        }.execute();
+
+
+
+
+
+
+
+
+
+
+    }
+
+    /**
+     * refresh
+     */
+    public void refresh() {
+        if (getArguments().getInt("index", 0) > 0 && mRecyclerView != null) {
+            mRecyclerView.smoothScrollToPosition(0);
+        }
+    }
+
+    /**
+     * Called when a fragment will be displayed
+     */
+    public void willBeDisplayed() {
+        if (mFragmentContainer != null) {
+            Animation fadeIn = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in);
+            mFragmentContainer.startAnimation(fadeIn);
+        }
+    }
+
+    /**
+     * Called when a fragment will be displayed
+     */
+    public void willBeHidden() {
+        if (mFragmentContainer != null) {
+            Animation fadeOut = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_out);
+            mFragmentContainer.startAnimation(fadeOut);
+        }
+    }
+
+    /**
+     * swipeLayout refresh
+     */
+    @Override
+    public void onRefresh() {
+        mMultiRefreshAdapter.setEnableLoadMore(false);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                List<ItemDemoBean> newDatas = new ArrayList<ItemDemoBean>();
+                for (int i = 0; i < 5; i++) {
+                    ItemDemoBean item = new ItemDemoBean();
+                    item.setTitle("New Title->" + i);
+                    item.setImageResource(R.drawable.ic_home_black_24dp);
+                    newDatas.add(item);
+                }
+                mMultiRefreshAdapter.addData(0, newDatas);
+                mSwipeRefreshLayout.setRefreshing(false);
+                mMultiRefreshAdapter.setEnableLoadMore(true);
+            }
+        }, 1000);
+    }
+
+    /**
+     * request More Data
+     */
+    @Override
+    public void onLoadMoreRequested() {
+        mSwipeRefreshLayout.setEnabled(false);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                List<ItemDemoBean> newDatas = new ArrayList<ItemDemoBean>();
+                for (int i = 0; i < 5; i++) {
+                    ItemDemoBean item = new ItemDemoBean();
+                    item.setTitle("Request More Title->" + i);
+                    item.setImageResource(R.drawable.ic_home_black_24dp);
+                    newDatas.add(item);
+                }
+                mMultiRefreshAdapter.addData(newDatas);
+                mMultiRefreshAdapter.loadMoreComplete();
+                mSwipeRefreshLayout.setEnabled(true);
+            }
+        }, 1000);
+    }
+
+    @Override
+    public void showLoading() {
+
+    }
+
+    @Override
+    public void hideLoading() {
+
+    }
+
+    @Override
+    public void success(List<Feed> feedList) {
+        for (int i = 0; i < feedList.size(); i++) {
+            Log.d("lpftag","size->"+feedList.size());
+        }
+    }
+
+    @Override
+    public void failed() {
+        Log.d("lpftag","failed");
+    }
+
+    @Override
+    protected void initPresenter() {
+        mPresenter.setViewAndModel(this,mModel);
+    }
+
+
+    @Override
+    protected void initListener() {
+
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

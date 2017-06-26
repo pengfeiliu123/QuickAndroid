@@ -1,12 +1,22 @@
 package com.lpf.quickandroid.demo;
 
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +24,13 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.NotificationTarget;
+import com.bumptech.glide.request.target.Target;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lpf.quickandroid.R;
 
@@ -65,6 +80,63 @@ public class DemoFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     // init First Fragment demo
     private void initDemoFirst(View view) {
+
+        view.findViewById(R.id.click_noti).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final RemoteViews remoteView = new RemoteViews(getActivity().getPackageName(), R.layout.notification_layout);
+                remoteView.setImageViewResource(R.id.noti_icon, R.mipmap.ic_launcher);
+                remoteView.setTextViewText(R.id.noti_title, "test title");
+
+                Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getActivity())
+                        .setContentTitle("我是title")
+                        .setContentText("我是body")
+                        .setAutoCancel(true)
+                        .setSound(defaultSoundUri)
+//                .setContent(remoteView)
+                        .setCustomBigContentView(remoteView);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    notificationBuilder.setSmallIcon(R.drawable.ic_maps_local_attraction);
+                } else {
+                    notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
+                }
+
+                final Notification notification = notificationBuilder.build();
+
+//        if (Build.VERSION.SDK_INT >= 16) {
+//            notification. = remoteView;
+//        }
+
+                Log.d("lpftag", "currentThread" + Thread.currentThread().getName());
+
+
+                NotificationTarget notificationTarget = new NotificationTarget(getActivity().getApplicationContext(), remoteView, R.id.noti_img, notification, 1000);
+
+                Glide.with(getActivity().getApplicationContext()).load("https://d1d7glqtmsbpdn.cloudfront.net/for_list/f9b8b307efccaae15be6c3bbee6d2ccbf9c2bf26.jpg")
+                        .asBitmap()
+                        .placeholder(R.mipmap.ic_launcher)
+                        .error(R.mipmap.ic_launcher)
+                        .listener(new RequestListener<String, Bitmap>() {
+                            @Override
+                            public boolean onException(Exception e, String model, Target<Bitmap> target, boolean isFirstResource) {
+                                Log.d("lpftag", e.toString());
+                                return true;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Bitmap resource, String model, Target<Bitmap> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                NotificationManager notificationManager =
+                                        (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+
+                                notificationManager.notify(1000, notification);
+                                return false;
+                            }
+                        })
+                        .dontAnimate().into(notificationTarget);
+            }
+        });
 
     }
 

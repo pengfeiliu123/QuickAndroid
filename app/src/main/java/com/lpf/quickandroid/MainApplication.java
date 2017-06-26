@@ -1,6 +1,5 @@
 package com.lpf.quickandroid;
 
-import android.content.Context;
 import android.support.multidex.MultiDexApplication;
 
 import com.socks.library.KLog;
@@ -10,14 +9,14 @@ import com.squareup.leakcanary.LeakCanary;
  * Created by liupengfei on 2017/6/11 16:02.
  */
 
-public class App extends MultiDexApplication {
+public class MainApplication extends MultiDexApplication {
 
-    private static Context context;
+    private static MainApplication instance;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        context = this;
+        instance = this;
         KLog.init(BuildConfig.LOG_DEBUG);
 
         if (LeakCanary.isInAnalyzerProcess(this)) {
@@ -28,7 +27,7 @@ public class App extends MultiDexApplication {
         LeakCanary.install(this);
     }
 
-    public static Context getContext(){
-        return context;
+    public static MainApplication getInstance(){
+        return instance;
     }
 }

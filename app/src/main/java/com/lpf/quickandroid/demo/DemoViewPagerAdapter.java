@@ -1,8 +1,11 @@
 package com.lpf.quickandroid.demo;
 
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
+
+import com.lpf.quickandroid.gif.GifFragment;
 
 import java.util.ArrayList;
 
@@ -12,21 +15,21 @@ import java.util.ArrayList;
 
 public class DemoViewPagerAdapter extends FragmentPagerAdapter {
 
-    private ArrayList<DemoFragment> fragments = new ArrayList<>();
-    private DemoFragment currentFragment;
+    private ArrayList<Fragment> fragments = new ArrayList<>();
+    private Fragment currentFragment;
 
     public DemoViewPagerAdapter(FragmentManager fm) {
         super(fm);
 
         fragments.clear();
         fragments.add(DemoFragment.newInstance(0));
-        fragments.add(DemoFragment.newInstance(1));
-        fragments.add(DemoFragment.newInstance(2));
-        fragments.add(DemoFragment.newInstance(3));
+        fragments.add(DemoFragment.newInstance(0));
+        fragments.add(DemoFragment.newInstance(0));
+        fragments.add(DemoFragment.newInstance(0));
     }
 
     @Override
-    public DemoFragment getItem(int i) {
+    public Fragment getItem(int i) {
         return fragments.get(i);
     }
 
@@ -38,12 +41,12 @@ public class DemoViewPagerAdapter extends FragmentPagerAdapter {
     @Override
     public void setPrimaryItem(ViewGroup container, int position, Object object) {
         if(getCurrentFragment()!=object){
-            currentFragment = ((DemoFragment)object);
+            currentFragment = ((Fragment)object);
         }
         super.setPrimaryItem(container, position, object);
     }
 
-    public DemoFragment getCurrentFragment() {
+    public Fragment getCurrentFragment() {
         return currentFragment;
     }
 

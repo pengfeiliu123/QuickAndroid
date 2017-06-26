@@ -2,11 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fragmentContainer"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.lpf.common.bottom_demo.DemoFragment">
+    android:layout_height="match_parent">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:id="@+id/click_noti"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="@string/hello_blank_fragment" />

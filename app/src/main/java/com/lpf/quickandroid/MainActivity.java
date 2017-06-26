@@ -2,6 +2,7 @@ package com.lpf.quickandroid;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
@@ -17,7 +18,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DemoFragment mCurrentFragment;
+    private Fragment mCurrentFragment;
     private DemoViewPagerAdapter mAdapter;
     private AHBottomNavigationAdapter mNavigationAdapter;
     private int[] mTabColors;
@@ -57,18 +58,18 @@ public class MainActivity extends AppCompatActivity {
                     mCurrentFragment = mAdapter.getCurrentFragment();
                 }
 
-                if(wasSelected){
-                    mCurrentFragment.refresh();
-                    return true;
-                }
-
-                if(mCurrentFragment != null){
-                    mCurrentFragment.willBeHidden();
-                }
+//                if(wasSelected){
+//                    mCurrentFragment.refresh();
+//                    return true;
+//                }
+//
+//                if(mCurrentFragment != null){
+//                    mCurrentFragment.willBeHidden();
+//                }
 
                 viewPager.setCurrentItem(position,false);
                 mCurrentFragment = mAdapter.getCurrentFragment();
-                mCurrentFragment.willBeDisplayed();
+//                mCurrentFragment.willBeDisplayed();
 
                 bottomNavigation.setNotification("",position);          // dimiss notification num
 
