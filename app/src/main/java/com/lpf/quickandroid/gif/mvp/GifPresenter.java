@@ -2,9 +2,9 @@ package com.lpf.quickandroid.gif.mvp;
 
 import java.util.List;
 
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+//import rx.Subscriber;
+//import rx.android.schedulers.AndroidSchedulers;
+//import rx.schedulers.Schedulers;
 
 /**
  * Created by liupengfei on 2017/6/23 16:27.

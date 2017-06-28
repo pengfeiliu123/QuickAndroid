@@ -25,8 +25,9 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".splash.SplashActivity" />
-        <activity android:name=".splash.SplashActivityKt"></activity>
+        <!--<activity android:name=".splash.SplashActivity" />-->
+        <!--<activity android:name=".splash.SplashActivityKt" />-->
+        <activity android:name=".retrofit_rxjava.RetrofitForMovieActivity"></activity>
     </application>
 
 </manifest>

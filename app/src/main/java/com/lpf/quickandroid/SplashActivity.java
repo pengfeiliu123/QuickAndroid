@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.lpf.quickandroid.retrofit_rxjava.RetrofitForMovieActivity;
 import com.lpf.quickandroid.splash.ItemSplash;
 import com.lpf.quickandroid.splash.SplashRvAdapter;
 
@@ -36,6 +37,7 @@ public class SplashActivity extends AppCompatActivity {
 
     private void initView() {
         datas.add(new ItemSplash("ButtomNavigation",MainActivity.class));
+        datas.add(new ItemSplash("RetrofitOnly",RetrofitForMovieActivity.class));
         splashRv.setLayoutManager(new GridLayoutManager(this, 2));
         mAdapter = new SplashRvAdapter(R.layout.item_splash, datas);
         splashRv.setAdapter(mAdapter);
