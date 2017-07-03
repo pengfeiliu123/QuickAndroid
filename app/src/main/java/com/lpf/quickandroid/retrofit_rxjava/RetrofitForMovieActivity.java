@@ -2,13 +2,17 @@ package com.lpf.quickandroid.retrofit_rxjava;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.lpf.quickandroid.MainActivity;
 import com.lpf.quickandroid.R;
+import com.lpf.quickandroid.retrofit_rxjava.common.ApiService;
+import com.lpf.quickandroid.retrofit_rxjava.common.HttpMethods;
 import com.lpf.quickandroid.splash.ItemSplash;
 import com.squareup.haha.perflib.Main;
 import com.trello.rxlifecycle2.RxLifecycle;
@@ -24,6 +28,11 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.FlowableSubscriber;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
@@ -66,7 +75,9 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
         getData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getMovie();
+
+//                getMovie();
+                getMovie22();
             }
         });
 
@@ -76,7 +87,11 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
 //                getMovie2();
 //                testClick();
 //                testFlatMap();
-                combineLocalAndNetData();
+//                combineLocalAndNetData();
+//                getMovie22();
+//                getMovie3();
+                getMovie33();
+//                testFlowable();
             }
         });
 
@@ -171,12 +186,55 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
                 .compose(this.<MovieEntity>bindToLifecycle())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<MovieEntity>() {
+                .subscribe(new Observer<MovieEntity>() {
                     @Override
-                    public void accept(@NonNull MovieEntity movieEntity) throws Exception {
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull MovieEntity movieEntity) {
+
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
 
                     }
                 });
+    }
+
+    //Singleton Observable
+    private void getMovie22() {
+        Observer<MovieEntity> observer = new Observer<MovieEntity>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull MovieEntity movieEntity) {
+                Toast.makeText(RetrofitForMovieActivity.this, "size->" + movieEntity.getSubjects().size(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
+        HttpMethods.getInstance().getTopMovie2(0, 10)
+                .compose(this.<MovieEntity>bindToLifecycle())
+                .subscribe(observer);
     }
 
     //Flowable
@@ -195,27 +253,57 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
                 .compose(this.<MovieEntity>bindToLifecycle())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<MovieEntity>() {
+                .subscribe(new FlowableSubscriber<MovieEntity>() {
                     @Override
-                    public void onSubscribe(Subscription s) {
-
+                    public void onSubscribe(@NonNull Subscription s) {
+                        Log.d("lpftage", "onSubscribe");
+                        s.request(1);
                     }
 
                     @Override
                     public void onNext(MovieEntity movieEntity) {
-
+                        Log.d("lpftage", "onNext");
+                        Toast.makeText(RetrofitForMovieActivity.this, "size->" + movieEntity.getSubjects().size(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onError(Throwable t) {
-
+                        Log.d("lpftage", "onError");
                     }
 
                     @Override
                     public void onComplete() {
-
+                        Log.d("lpftage", "onComplete");
                     }
                 });
+    }
+
+    private void getMovie33() {
+        Subscriber<MovieEntity> subscriber = new Subscriber<MovieEntity>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                // long 用来设置要传递下去的数据个数
+                s.request(1);
+            }
+
+            @Override
+            public void onNext(MovieEntity movieEntity) {
+                Toast.makeText(RetrofitForMovieActivity.this, "size--->" + movieEntity.getSubjects().size(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                t.printStackTrace();
+            }
+
+            @Override
+            public void onComplete() {
+                Toast.makeText(RetrofitForMovieActivity.this, "complete", Toast.LENGTH_SHORT).show();
+            }
+        };
+        HttpMethods.getInstance().getTopMovie3(0, 10)
+                .compose(this.<MovieEntity>bindToLifecycle())
+                .subscribe(subscriber);
     }
 
     //FlatMap
@@ -254,7 +342,7 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
     }
 
     // combine local and net datas
-    private void combineLocalAndNetData(){
+    private void combineLocalAndNetData() {
 
         final MovieService movieService = new Retrofit.Builder()
                 .baseUrl("https://api.douban.com/v2/movie/")
@@ -282,7 +370,7 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
                         //下面这样会输出两次
                         Observable<List<String>> localData = Observable.just(mockDatas);
                         Observable<List<String>> netData = Observable.just(movieEntity.getSubjects().get(0).getGenres());
-                        return Observable.merge(localData,netData);
+                        return Observable.merge(localData, netData);
                     }
                 })
                 .subscribeOn(Schedulers.io())
@@ -297,7 +385,39 @@ public class RetrofitForMovieActivity extends RxAppCompatActivity {
                     @Override
                     public void accept(@NonNull List<String> strings) throws Exception {
                         getData2.setEnabled(true);
-                        Toast.makeText(RetrofitForMovieActivity.this, "combineData:"+strings.toString(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RetrofitForMovieActivity.this, "combineData:" + strings.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // Flowable request
+    private void testFlowable() {
+        Flowable.range(0, 10)
+                .subscribe(new Subscriber<Integer>() {
+                    Subscription sub;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        Log.d("lpftag", "onSubscribe Start");
+                        sub = s;
+                        sub.request(5);
+                        Log.d("lpftag", "onSubscribe End");
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        Log.d("lpftag", "onNext->" + integer);
+//                        sub.request(1);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        t.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d("lpftage", "onComplete");
                     }
                 });
     }
