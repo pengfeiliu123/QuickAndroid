@@ -16,13 +16,14 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
 
     public static final int REQUEST_CODE_CAMERA = 1;
@@ -34,8 +35,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HomeWatcher mHomeWatcher;
 
     private FrameLayout mFLWhite;
-    private SwitchButton mSwitchButton;
     private ToggleButton mSoundSwitch;
+    private ToggleButton mSwitchButton;
 
     private SurfaceHolder surfaceHolder;
 
@@ -85,6 +86,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void initViews() {
+        mSwitchButton = (ToggleButton) findViewById(R.id.switchBtn);
+        final String stateText = mSwitchButton.getText().toString();
+        mSwitchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+//                    App.instance.openCamera();
+                    turnOnCamera();
+//                    mSwitchButton.setChecked(true);
+                }else{
+//                    App.instance.closeCamera();
+                    turnOffCamera();
+//                    mSwitchButton.setChecked(false);
+                }
+            }
+        });
+//        mSwitchButton.setOnCheckedChangeListener(this);
+//        mSwitchButton.setChecked(true);
         mHomeWatcher = new HomeWatcher(this);
         mHomeWatcher.setOnHomePressedListener(new HomeWatcher.OnHomePressedListener() {
             @Override
@@ -99,8 +118,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+
+
+//    @Override
+//    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//        switch(buttonView.getId()){
+//            case R.id.switchBtn:
+//                if(isChecked){
+//                    App.instance.closeCamera();
+//                    mSwitchButton.setChecked(false);
+//                }else{
+//                    App.instance.openCamera();
+//                    mSwitchButton.setChecked(true);
+//                }
+//                break;
+//        }
+//    }
+
     private void initUIComponents() {
-//        mFLWhite = (FrameLayout) findViewById(R.id.main_fl_white);
+        mFLWhite = (FrameLayout) findViewById(R.id.main_fl_white);
     }
 
     @Override
@@ -183,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private synchronized void turnOnCamera() {
         Thread.yield();
         if (App.instance.isCameraEnabled) {
+            App.instance.openCamera();
             Camera camera = App.instance.camera;
             if (Build.VERSION.SDK_INT >= 23) {
                 try {
@@ -239,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void onWindowFocusChanged(boolean hasFocus){
+    public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         onUpdateUI();
     }
